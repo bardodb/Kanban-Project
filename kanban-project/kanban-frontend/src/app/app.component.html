@@ -1,0 +1,173 @@
+<div class="app-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="workspace-header">
+      <div class="workspace-icon">K</div>
+      <div class="workspace-info">
+        <div class="workspace-title">Kanban Board</div>
+        <div class="workspace-type">Free Workspace</div>
+      </div>
+    </div>
+    
+    <div class="workspace-menu">
+      <div class="section-title">Workspace</div>
+      <div class="menu-item">
+        <i class="material-icons">dashboard</i>
+        <span>Boards</span>
+      </div>
+      <div class="menu-item">
+        <i class="material-icons">people</i>
+        <span>Members</span>
+      </div>
+      <div class="menu-item">
+        <i class="material-icons">settings</i>
+        <span>Settings</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="board-header">
+      <h1>{{ boardTitle }}</h1>
+    </div>
+
+    <!-- Board Container -->
+    <div class="board-container">
+      <div class="board">
+        <!-- Lists Container -->
+        <div class="lists-container" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="dropList($event)" cdkDropListGroup>
+          <!-- Individual Lists -->
+          <div class="list" *ngFor="let list of lists" cdkDrag [cdkDragData]="list">
+            <div class="list-header" cdkDragHandle>
+              <div class="list-title">
+                <h2>{{ list.title }}</h2>
+                <button class="menu-button" (click)="openListMenu(list)">
+                  <i class="material-icons">more_horiz</i>
+                </button>
+              </div>
+            </div>
+
+            <div class="cards-container"
+                 cdkDropList
+                 [id]="list.id"
+                 [cdkDropListData]="list.cards"
+                 [cdkDropListConnectedTo]="getConnectedLists()"
+                 (cdkDropListDropped)="dropCard($event)">
+              
+              <!-- Cards -->
+              <div *ngFor="let card of list.cards"
+                   class="card"
+                   [style.background-color]="card.color"
+                   [style.color]="getTextColor(card.color)"
+                   cdkDrag
+                   (click)="openCardDetails(card, list)">
+                <div class="card-content">
+                  <h3>{{ card.title }}</h3>
+                  <p>{{ card.description }}</p>
+                </div>
+              </div>
+
+              <!-- Add Card Button -->
+              <div class="add-card-button" (click)="openNewCardDialog($event, list)">
+                <i class="material-icons">add</i>
+                <span>Add a card</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add List Button and Form -->
+          <div class="add-list-wrapper">
+            <div class="add-list-button" (click)="toggleNewListForm()" *ngIf="!showNewListForm">
+              <i class="material-icons">add</i>
+              <span>Add another list</span>
+            </div>
+            
+            <div class="new-list-form" *ngIf="showNewListForm">
+              <input type="text" 
+                     [(ngModel)]="newListTitle" 
+                     placeholder="Enter list title..."
+                     (keyup.enter)="addNewList()"
+                     (keyup.escape)="toggleNewListForm()"
+                     #newListInput>
+              <div class="form-actions">
+                <button class="add-button" (click)="addNewList()">Add List</button>
+                <button class="cancel-button" (click)="toggleNewListForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Card Popup -->
+  <div class="card-popup" *ngIf="showCardPopup" [ngStyle]="popupStyle">
+    <div class="card-popup-content">
+      <input type="text" 
+             [(ngModel)]="newCardTitle" 
+             placeholder="Enter a title or paste a link"
+             (keyup.enter)="addNewCard()"
+             (keyup.escape)="closeCardPopup()"
+             #newCardInput>
+      <div class="popup-actions">
+        <button class="add-card-btn" (click)="addNewCard()">Add card</button>
+        <button class="close-btn" (click)="closeCardPopup()">×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Details Popup -->
+  <div class="card-details-modal" *ngIf="showCardDetails">
+    <div class="modal-overlay" (click)="closeCardDetails()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="card-title">
+          <i class="material-icons">description</i>
+          <input type="text" 
+                 [(ngModel)]="editingCardTitle"
+                 placeholder="Enter card title"
+                 #cardTitleInput>
+        </div>
+        <div class="list-info">
+          in list <strong>{{ currentList?.title }}</strong>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="colors-section">
+          <div class="section-header">
+            <i class="material-icons">palette</i>
+            <h3>Colors</h3>
+          </div>
+          <div class="color-picker">
+            <button *ngFor="let color of cardColors"
+                    class="color-option"
+                    [class.selected]="currentCard?.color === color.value"
+                    [style.background-color]="color.value"
+                    [style.color]="getTextColor(color.value)"
+                    (click)="updateCardColor(color.value)"
+                    [attr.title]="color.name">
+            </button>
+          </div>
+        </div>
+
+        <div class="description-section">
+          <div class="section-header">
+            <i class="material-icons">subject</i>
+            <h3>Description</h3>
+            <button class="edit-button">Edit</button>
+          </div>
+          <textarea [(ngModel)]="editingCardDescription"
+                    placeholder="Add a more detailed description..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="save-button" (click)="saveCardDetails()">Save</button>
+        <button class="delete-button" (click)="deleteCard()">Delete</button>
+        <button class="close-button" (click)="closeCardDetails()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
